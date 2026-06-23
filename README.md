@@ -8,4 +8,4 @@
 
 **Key Finding:** XGBoost gross Sharpe 0.78 → net Sharpe 0.19 after costs. SMA crossover gross Sharpe 0.52 → net Sharpe 0.48. Complexity and real-world profitability are inversely related after transaction costs.
 
-**Paper:** [PDF](link) | **Code:** [Colab Notebook](link) | **Data:** NIFTY 50 via yfinance
+**Paper:** [PDF](link) | **Code:** [Colab Notebook](https://colab.research.google.com/drive/1UhUv8jnmNNjNNyQY3V-zZtfXEWK4ZEW7?usp=sharing) | **Data:** NIFTY 50 via yfinance
