@@ -3,7 +3,7 @@
 
 **Sachin Kumar | IIT Madras | 2026**  
 Paper: [The_Complexity_Trap.pdf](/The_Complexity_Trap_Paper.pdf)  
-Code: [complexity_trap.ipynb]([complexity_trap.ipynb](https://colab.research.google.com/drive/1UhUv8jnmNNjNNyQY3V-zZtfXEWK4ZEW7?usp=sharing))
+Code: [complexity_trap.ipynb](/The_Complexity_Trap_NIFTY50_Research.ipynb)
 
 ---
 
