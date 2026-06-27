@@ -2,7 +2,7 @@
 ## A Comparative Analysis of Classical and ML Trading Strategies on NIFTY 50
 
 **Sachin Kumar | IIT Madras | 2026**  
-Paper: [The_Complexity_Trap.pdf](paper/The_Complexity_Trap.pdf)  
+Paper: [The_Complexity_Trap.pdf](/The_Complexity_Trap_Paper.pdf)  
 Code: [complexity_trap.ipynb](complexity_trap.ipynb)
 
 ---
