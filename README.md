@@ -12,7 +12,7 @@ Code: [complexity_trap.ipynb](/The_Complexity_Trap_NIFTY50_Research.ipynb)
 Machine learning strategies suffer disproportionate performance 
 erosion from transaction costs. The Complexity Penalty — defined 
 as the difference between gross and net Sharpe ratio — increases 
-monotonically with model sophistication.
+monotonically with model sophistication..
 
 **SMA Crossover remains profitable at costs up to 5.977% per trade.  
 XGBoost fails at 0.490%. LSTM is already losing money at current 
