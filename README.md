@@ -1,30 +1,43 @@
 # The Complexity Trap
-## A Comparative Analysis of Classical and ML Trading Strategies on NIFTY 50
+## A Comparative Analysis of Classical and Machine Learning Trading Strategies on NIFTY 50
 
-**Sachin Kumar | IIT Madras | 2026**  
-Paper: [The_Complexity_Trap.pdf](/The_Complexity_Trap_Paper.pdf)  
-Code: [complexity_trap.ipynb](/The_Complexity_Trap_NIFTY50_Research.ipynb)
+**Sachin Kumar | IIT Madras | 2026**
+Paper: [The_Complexity_Trap.pdf](paper/The_Complexity_Trap.pdf)
+Code: [complexity_trap.ipynb](complexity_trap.ipynb)
+
+**Status:** v1.1 — see [ADDENDUM.md](ADDENDUM.md) for a correction to the
+break-even methodology's framing and an arithmetic fix, made after peer
+review. The PDF is left unchanged as the original v1 record.
 
 ---
 
 ## The Central Finding
 
-Machine learning strategies suffer disproportionate performance 
-erosion from transaction costs. The Complexity Penalty — defined 
-as the difference between gross and net Sharpe ratio — increases 
-monotonically with model sophistication.
+Machine learning strategies suffer disproportionate performance erosion
+from transaction costs relative to their gross edge — the Complexity
+Penalty, defined as the difference between gross and net Sharpe ratio,
+increases monotonically with model sophistication.
 
-**SMA Crossover remains profitable at costs up to 5.977% per trade.  
-XGBoost fails at 0.490%. LSTM is already losing money at current 
+**Note:** on raw net Sharpe over this test window, Random Forest (5.65) and
+XGBoost (3.16) still outperform SMA Crossover (0.78) and Bollinger Bands
+(1.60) in absolute terms. The Complexity Penalty measures how cost-fragile
+a strategy's edge is — it is not a claim that lower-complexity strategies
+are the better trade. Both axes matter; see the Addendum for the fuller
+picture.
+
+**SMA Crossover remains profitable at costs up to 5.977% per trade.
+XGBoost fails at 0.490%. LSTM is already losing money at current
 Indian market cost levels (0.14%).**
 
-SMA is 12x more robust to cost variation than XGBoost.  
-SMA is 21x more robust to cost variation than LSTM.
+SMA's break-even cost is 12x XGBoost's and ~20x LSTM's. Measured against
+the current baseline cost (0.14%), SMA can absorb costs ~43x higher before
+failing — XGBoost only ~3.5x.
 
-This is not because ML models are wrong about direction.  
-It is because the cost of acting on their predictions exceeds  
-the edge they identify. The model is not the problem.  
-The frequency is.
+This is not because ML models are wrong about direction.
+It is because the cost of acting on their predictions erodes
+more of the edge they identify, trade for trade, than it does
+for lower-frequency strategies. The model is not "wrong" —
+its edge is simply more exposed to cost assumptions.
 
 ---
 
@@ -41,6 +54,11 @@ The frequency is.
 | XGBoost | 3.73 | 3.16 | 0.57 | **15.3%** |
 | LSTM | -0.09 | -0.16 | 0.07 | N/A |
 
+**Reading this table correctly:** Random Forest and XGBoost have larger
+Complexity Penalties (they lose more of their edge to costs) but still post
+the highest *net* Sharpe ratios in this table. Penalty % and net Sharpe
+rank differently — that's the point of reporting both, not a contradiction.
+
 ### Sensitivity Analysis — Net Sharpe at Different Cost Levels
 
 | Strategy | 0.05% | 0.10% | 0.14% | 0.20% | Break-Even |
@@ -52,25 +70,31 @@ The frequency is.
 | XGBoost | 3.33 | 2.90 | 2.53 | 1.95 | **0.490%** |
 | LSTM | -0.22 | -0.28 | -0.33 | -0.40 | **0.291%** |
 
-**Indian market round-trip cost baseline: 0.14%**  
-At this cost level, LSTM is already unprofitable.  
-XGBoost survives only 3.5x before failing.  
-SMA survives 43x before failing.
+**Indian market round-trip cost baseline: 0.14%**
+At this cost level, LSTM is already unprofitable.
+XGBoost survives only ~3.5x current baseline cost before failing.
+SMA survives ~43x current baseline cost before failing.
 
 ---
 
 ## What Is the Complexity Penalty?
-A novel metric introduced in this paper to quantify how much of 
-a strategy's apparent performance is destroyed by transaction 
-costs. Strategies with low penalties are robust. Strategies 
-with high penalties are paper tigers — impressive in backtests, 
-dangerous in live trading.
 
-The penalty increases because complex models trade more 
-frequently. More trades means more costs. On daily NIFTY 50 
-data with signal-to-noise ratio of approximately 0.02, the 
-cost of acting on ML signals exceeds the edge those signals 
-identify.
+```
+Complexity Penalty = Gross Sharpe − Net Sharpe
+```
+
+A metric introduced in this paper to quantify how much of a strategy's
+apparent performance is destroyed by transaction costs, given its actual
+trading frequency. A high penalty means a strategy's *edge* is fragile to
+cost assumptions — it does **not** by itself mean the strategy is a worse
+trade than one with a lower penalty. Compare penalty and net Sharpe
+together, not either in isolation.
+
+The penalty rises with trading frequency because each trade incurs a fixed
+cost regardless of the size of the edge captured. On daily NIFTY 50 data
+with a signal-to-noise ratio of roughly 0.02, that fixed per-trade cost
+consumes a larger share of a high-frequency strategy's edge — even when
+that strategy's total, uneroded edge remains larger in absolute terms.
 
 ---
 
@@ -101,25 +125,28 @@ Every strategy passed all 5 checks before results were reported:
 
 ## Key Technical Decisions
 
-**Why depth-5 for Random Forest?**  
-Financial daily return data has signal-to-noise ratio ~0.02. 
-Unlimited depth finds noise. Depth-5 with min_samples_leaf=20 
-forces the model to learn only robust patterns.
+**Why depth-5 for Random Forest?**
+Financial daily return data has signal-to-noise ratio ~0.02. Unlimited
+depth finds noise. Depth-5 with min_samples_leaf=20 forces the model to
+learn only robust patterns. Note: this is a specific configuration choice,
+not an inherent property of Random Forests — a shallower/deeper tree or a
+different probability threshold would change both the trade count and the
+resulting Complexity Penalty. See Addendum for more on this.
 
-**Why early stopping for XGBoost?**  
-Prevents memorisation of training data. Stops when validation 
-logloss stops improving for 20 consecutive rounds.
+**Why early stopping for XGBoost?**
+Prevents memorisation of training data. Stops when validation logloss
+stops improving for 20 consecutive rounds.
 
-**Why does LSTM underperform despite complexity?**  
-33,451 parameters trained on 1,077 sequences. This is severe 
-data starvation. Daily equity data provides insufficient 
-examples for a model this complex to generalise.
+**Why does LSTM underperform despite complexity?**
+33,451 parameters trained on 1,077 sequences. This is severe data
+starvation. Daily equity data provides insufficient examples for a model
+this complex to generalise on a 282-day test window.
 
-**Why 0.14% round-trip cost?**  
-Brokerage (0.03%) + STT (0.025%) + Stamp Duty (0.005%) + 
-estimated slippage (0.01%) = 0.07% one-way = 0.14% round-trip. 
-Indian transaction costs are 3-5x higher than US zero-commission 
-brokers, which amplifies the Complexity Trap.
+**Why 0.14% round-trip cost?**
+Brokerage (0.03%) + STT (0.025%) + Stamp Duty (0.005%) + estimated
+slippage (0.01%) = 0.07% one-way = 0.14% round-trip. Indian transaction
+costs are 3-5x higher than US zero-commission brokers, which amplifies
+the Complexity Penalty. This is a fixed cost model — see Limitations.
 
 ---
 
@@ -127,10 +154,20 @@ brokers, which amplifies the Complexity Trap.
 
 - Test window is 282 trading days — short for definitive conclusions
 - Single asset (NIFTY 50 index) — not a diversified portfolio
-- ML gross Sharpe ratios on short test window may reflect 
-  overfitting rather than genuine alpha
+- ML gross Sharpe ratios on short test window may reflect overfitting
+  rather than genuine alpha
 - Fixed cost model — real costs vary with volatility and order size
 - No shorting — long or flat positions only
+- **The break-even cost metric is mechanically biased toward
+  low-trade-count strategies** — the same total edge divided by fewer
+  trades yields a larger per-trade break-even threshold, independent of
+  whether the underlying signal is actually more robust. It measures
+  cost-elasticity given a strategy's trade count, not signal quality in
+  isolation. See [ADDENDUM.md](ADDENDUM.md).
+- RF/XGBoost hyperparameters (depth, threshold) are specific configuration
+  choices that directly determine trade frequency and therefore the
+  reported Complexity Penalty — not an inherent property of "more complex
+  models trade more."
 
 ---
 
@@ -147,11 +184,25 @@ Total runtime: approximately 3-5 minutes including LSTM training.
 
 ---
 
+## Files
+
+```
+the-complexity-trap/
+├── README.md
+├── ADDENDUM.md              ← correction notes, added after peer review
+├── complexity_trap.ipynb    ← complete reproducible code
+├── paper/
+│   └── The_Complexity_Trap.pdf   ← original v1 paper, unchanged
+└── results/
+    ├── complexity_trap_main.png
+    └── cumulative_returns_sensitivity.png
+```
+
 ---
 
 ## Tech Stack
 
-Python · Pandas · NumPy · Matplotlib · Scikit-learn ·  
+Python · Pandas · NumPy · Matplotlib · Scikit-learn ·
 XGBoost · TensorFlow/Keras · yfinance
 
 ---
@@ -160,16 +211,15 @@ XGBoost · TensorFlow/Keras · yfinance
 
 If you use this work, please cite:
 
-Kumar, S. (2026). The Complexity Trap: A Comparative Analysis 
-of Classical and Machine Learning Trading Strategies on the 
+Kumar, S. (2026). The Complexity Trap: A Comparative Analysis
+of Classical and Machine Learning Trading Strategies on the
 NIFTY 50 Index. IIT Madras. github.com/sachin23-an
 
 ---
 
-*Before you build a neural network, build a cost model.  
-Before you optimize for accuracy, optimize for net Sharpe.  
-And before you celebrate a gross backtest, ask what remains  
+*Before you build a neural network, build a cost model.
+Before you optimize for accuracy, optimize for net Sharpe.
+And before you celebrate a gross backtest, ask what remains
 after the market takes its cut.*
 
 — The Complexity Trap, Conclusion
-
